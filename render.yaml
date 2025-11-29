@@ -2,7 +2,7 @@ services:
   - type: web
     name: llm-analysis-quiz
     env: python
-    buildCommand: pip install -r requirements.txt && playwright install chromium && playwright install-deps chromium
+    buildCommand: pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && playwright install chromium && playwright install-deps chromium
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 180 app:app
     envVars:
       - key: OPENAI_API_KEY
