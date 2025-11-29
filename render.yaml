@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: llm-analysis-quiz
+    env: python
+    buildCommand: pip install -r requirements.txt && playwright install chromium && playwright install-deps chromium
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 180 app:app
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: EMAIL
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4-turbo-preview
+      - key: HEADLESS
+        value: True
+      - key: QUIZ_TIMEOUT
+        value: 170
+      - key: BROWSER_TIMEOUT
+        value: 30000
