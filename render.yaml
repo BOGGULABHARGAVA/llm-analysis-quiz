@@ -1,9 +1,9 @@
 services:
   - type: web
     name: llm-analysis-quiz
-    env: python
-    buildCommand: pip install --upgrade pip && pip install --prefer-binary --no-cache-dir -r requirements.txt && playwright install --with-deps chromium
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 180 app:app
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
     envVars:
       - key: OPENAI_API_KEY
         sync: false
