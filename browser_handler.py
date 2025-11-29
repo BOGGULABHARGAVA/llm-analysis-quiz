@@ -24,11 +24,29 @@ class BrowserHandler:
                 self.playwright = await async_playwright().start()
                 self.browser = await self.playwright.chromium.launch(
                     headless=Config.HEADLESS,
-                    args=['--no-sandbox', '--disable-setuid-sandbox']
+                    args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
                 )
                 logger.info("Browser initialized successfully")
+                
+                # Verify browser is working
+                if not self.browser:
+                    raise RuntimeError("Browser initialization returned None")
+                    
         except Exception as e:
             logger.error(f"Failed to initialize browser: {e}")
+            # Cleanup on failure
+            if self.browser:
+                try:
+                    await self.browser.close()
+                except:
+                    pass
+            if self.playwright:
+                try:
+                    await self.playwright.stop()
+                except:
+                    pass
+            self.browser = None
+            self.playwright = None
             raise
     
     async def close(self):
@@ -149,7 +167,21 @@ async def get_browser_handler() -> BrowserHandler:
     
     if _browser_handler is None:
         _browser_handler = BrowserHandler()
-        await _browser_handler.initialize()
+        try:
+            await _browser_handler.initialize()
+        except Exception as e:
+            logger.error(f"Failed to initialize browser handler: {e}")
+            _browser_handler = None
+            raise RuntimeError(f"Browser initialization failed: {e}") from e
+    
+    if _browser_handler.browser is None:
+        # Browser was created but somehow became None, reinitialize
+        try:
+            await _browser_handler.initialize()
+        except Exception as e:
+            logger.error(f"Failed to reinitialize browser: {e}")
+            _browser_handler = None
+            raise RuntimeError(f"Browser reinitialization failed: {e}") from e
     
     return _browser_handler
 
